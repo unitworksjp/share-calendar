@@ -1,0 +1,27 @@
+# ↑FROM debian:bullseye
+# ↑FROM buildpack-deps:bullseye-curl
+# ↑FROM buildpack-deps:bullseye-scm
+# ↑FROM buildpack-deps:bullseye
+# image:https://github.com/docker-library/ruby/blob/6a100006eeb52ec06bfe3f318b401cdf5a52dd6b/3.1/bullseye/Dockerfile
+FROM ruby:3.1.2
+
+RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs
+
+# ENV HOST_APP_PATH ./back
+ENV DOCK_APP_PATH /myapp
+
+RUN mkdir $DOCK_APP_PATH
+WORKDIR $DOCK_APP_PATH
+
+# COPY $HOST_APP_PATH/Gemfile $DOCK_APP_PATH/Gemfile
+# COPY $HOST_APP_PATH/Gemfile.lock $DOCK_APP_PATH/Gemfile.lock
+# RUN bundle install
+
+# COPY . $DOCK_APP_PATH
+
+# COPY entrypoint.sh /usr/bin/
+# RUN chmod +x /usr/bin/entrypoint.sh
+# ENTRYPOINT ["entrypoint.sh"]
+EXPOSE 3000
+
+CMD ["rails", "server", "-b", "0.0.0.0"]

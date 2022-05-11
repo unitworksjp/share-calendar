@@ -1,0 +1,9 @@
+# ↑FROM debian:buster
+# ↑FROM buildpack-deps:buster-curl
+# ↑FROM buildpack-deps:buster-scm
+# ↑FROM buildpack-deps:buster
+# image:https://github.com/nodejs/docker-node/blob/4e0fff70002f51c2b121c9b231917abcb63d2b1a/16/buster/Dockerfile
+FROM node:16.15.0
+
+#コンテナ内の作業ディレクトリ
+WORKDIR /usr/src/app

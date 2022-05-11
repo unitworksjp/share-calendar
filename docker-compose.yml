@@ -1,0 +1,73 @@
+version: '3.9'
+services:
+  app-front:
+    container_name: share-calendar-app-front
+    build:
+      dockerfile: Dockerfile-front
+      context: .
+    volumes:
+      - ./front:/usr/src/app
+    command: sh -c "yarn start"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app-back
+
+  app-back:
+    container_name: share-calendar-app-back
+    build:
+      dockerfile: Dockerfile-back
+      context: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - ./back:/myapp
+      # 下記マウントについて、"bundle install"の前に"bundle config set --local path 'vendor/bundle'"を実行しておかないと"rails new"でエラーが出る。
+      # ”bundle config set”を実行すると"/usr/local/bundle"にconfigファイルが出来るため、永続化のためホストにマウントする。
+      - ./back/vendor/bundle:/usr/local/bundle
+    environment:
+      TZ: Asia/Tokyo
+      RAILS_ENV: development
+    ports:
+      - "3001:3000"
+    depends_on:
+      - db
+
+  db:
+    # ↑FROM ubuntu:focal
+    # image:https://github.com/MariaDB/mariadb-docker/blob/db55d2702dfc0102364a29ab00334b6a02085ef9/10.7/Dockerfile
+    image: mariadb:10.7.3
+    container_name: share-calendar-db
+    environment:
+      MYSQL_DATABASE: scdb
+      MYSQL_ROOT_PASSWORD: password
+      # MYSQL_USER: db_user
+      # MYSQL_PASSWORD: db_password
+      TZ: "Asia/Tokyo"
+    # command: --default-authentication-plugin=mysql_native_password
+    # command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./db/conf.d:/etc/mysql/conf.d/
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db             # サービス名（db）でもコンテナ名（share-calendar-db）でもどちらでも繋がるみたい
+      - PMA_USER=root
+      - PMA_PASSWORD=password
+    # 無くても名前解決されるみたい（links自体推奨されないようなので必要ならNetworkを使う）
+    # links:
+    #   - db
+    ports:
+      - 8000:80
+    # 必要な理由がよくわからないので一旦コメントアウト
+    # volumes:
+    #   - ./phpmyadmin/sessions:/sessions
+    depends_on:
+      - db
+
+volumes:
+  mysql:
